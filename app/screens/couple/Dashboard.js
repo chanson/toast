@@ -9,7 +9,7 @@ import {
   View
 } from 'react-native';
 
-import FormItem from '../../components/form_item';
+import FormItemExpandable from '../../components/form_item_expandable';
 import FormSectionHeaderExpandable from '../../components/form_section_header_expandable';
 import FormSeparator from '../../components/form_separator';
 import ListFooter from '../../components/list_footer';
@@ -66,7 +66,9 @@ class Dashboard extends Component {
             { field: 'Wedding Date', key: 'date' } // FIXME: Datepicker
           ], //FIXME move all props to state; then remove `data` when pressed; store in `collapsed` object
           key: 'details',
-          title: 'Wedding Details:'
+          title: 'Wedding Details:',
+          open: true,
+          hiddenData: []
         }
       ]
     }
@@ -83,19 +85,17 @@ class Dashboard extends Component {
           </Text>
         </View>
         <View style={styles.contentBottomWrapper}>
-          <View style={styles.listWrapper}>
-            <Animated.View>
-              <SectionList
-                ItemSeparatorComponent={FormSeparator}
-                ListFooterComponent={ListFooter}
-                renderSectionHeader={ ({section}) => <FormSectionHeaderExpandable section={section} toggleSection={this._toggleSection}/>}
-                renderItem={({item}) => <FormItem field={item.field} secure={item.secure}/>}
-                scrollEnabled={false}
-                sections={this.state.sections}
-                style={styles.list}
-              />
-            </Animated.View>
-          </View>
+          <Animated.View style={styles.listWrapper}>
+            <SectionList
+              ItemSeparatorComponent={FormSeparator}
+              ListFooterComponent={ListFooter}
+              renderSectionHeader={ ({section}) => <FormSectionHeaderExpandable section={section} toggleSection={this._toggleSection}/>}
+              renderItem={this._renderItemComponent}
+              scrollEnabled={false}
+              sections={this.state.sections}
+              style={styles.list}
+            />
+          </Animated.View>
           <OnboardingButton
             text="Let's Go!"
           />
@@ -107,21 +107,84 @@ class Dashboard extends Component {
     )
   }
 
-  _toggleSection = (section) => {
-    console.log(this);
-    console.log(this.parentProps);
-    console.log(section);
-    // newSection = this.state.sections[0];
-    // newSection.data = [];
-    section.data = []
-    this.setState({ sections: [section] });
-    // delete this.state.sections[0].data;
-    // delete this.state.sections[0].key;
+  _closeSection = (sectionIndex) => {
+    // FIXME: might need to make sure this is the max when more items are in the list
+    section = this.state.sections[sectionIndex];
+    console.log('close called')
+    if (section) {
+      let newSection = Object.assign({}, section, {
+        data: [],
+        hiddenData: (section.open ? section.data : section.hiddenData),
+        open: false
+      })
+      console.log(newSection)
+      // newSection.hiddenData = JSON.parse ( JSON.stringify(newSection.data) );
+      // newSection.data = [];
+      // newSection.open = false; // FIXME update RN to latest and try conditionally rendering section list footer OR remove bottom border on header if data is empty...yeah maybe the latter
+      this.setState({ sections: [newSection] });
+    }
   };
 
-  _renderItemComponent = ({item}) => (
-    <ItemComponent item={item} onPress={this._pressItem} />
-  );
+  _openSection = (sectionIndex) => {
+    // FIXME: might need to make sure this is the max when more items are in the list
+    section = this.state.sections[sectionIndex];
+    console.log('open called')
+    if (section) {
+      console.log('open conditional entered')
+      let newSection = Object.assign({}, section, {
+        data: (section.open ? section.data : section.hiddenData),
+        hiddenData: [],
+        open: true
+      })
+      // newSection.data = JSON.parse ( JSON.stringify(newSection.hiddenData) );
+      // newSection.hiddenData = [];
+      // newSection.open = true; // FIXME update RN to latest and try conditionally rendering section list footer OR remove bottom border on header if data is empty...yeah maybe the latter
+      console.log(newSection)
+      this.setState({ sections: [newSection] });
+    }
+  };
+
+  _toggleSection = (section) => {
+    console.log('toggle called');
+    if (section.open) {
+      console.log('open')
+      section.data = section.data.map((item) => {
+        return {
+          field: item.field,
+          key: item.key,
+          removeSection: true,//!item.removeSection,
+          section: 0
+        }
+      });
+    } else {
+      console.log('closed')
+      section.data = section.hiddenData.map((item) => {
+        return {
+          field: item.field,
+          key: item.key,
+          removeSection: false,//!item.removeSection,
+          section: 0
+        }
+      });
+    }
+    // section.open = !section.open;
+    console.log(section)
+    this.setState({ sections: [section] });
+  };
+
+  _renderItemComponent = ({item, index, section}) => {
+    // console.log(section) FIXME: When upgrading to v0.47+, see if this works; might allow cleaner code
+    return(
+    <FormItemExpandable
+      field={item.field}
+      index={index}
+      onCloseSection={this._closeSection}
+      onOpenSection={this._openSection}
+      removeSection={item.removeSection}
+      section={item.section}
+      secure={item.secure}
+    />
+  )}
 }
 
 module.exports = Dashboard;
