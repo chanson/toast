@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import {
   Animated,
+  FlatList,
   ListItem,
   SectionList,
   StyleSheet,
@@ -8,9 +9,13 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import Accordion from 'react-native-collapsible/Accordion'
+
 
 import FormItemExpandable from '../../components/form_item_expandable';
+import FormItem from '../../components/form_item';
 import FormSectionHeaderExpandable from '../../components/form_section_header_expandable';
+import FormSectionHeader from '../../components/form_section_header'
 import FormSeparator from '../../components/form_separator';
 import ListFooter from '../../components/list_footer';
 import OnboardingButton from '../../components/onboarding_button';
@@ -39,7 +44,9 @@ const styles = StyleSheet.create({
     borderBottomColor: '#CCCCCC'
   },
   listWrapper: {
-    flexDirection: 'row',
+    flex: 1,
+    alignSelf: 'stretch',
+    flexDirection: 'column',
     marginBottom: 30
   },
   title: {
@@ -48,7 +55,7 @@ const styles = StyleSheet.create({
     fontWeight: '300',
     paddingBottom: 15
   }
-});
+})
 
 class Dashboard extends Component {
   static navigationOptions = {
@@ -66,12 +73,43 @@ class Dashboard extends Component {
             { field: 'Wedding Date', key: 'date' } // FIXME: Datepicker
           ], //FIXME move all props to state; then remove `data` when pressed; store in `collapsed` object
           key: 'details',
-          title: 'Wedding Details:',
-          open: true,
-          hiddenData: []
+          title: 'Wedding Details:'
+        },
+        {
+          data: [
+            { field: 'Bride / Groom', key: 'foo_1' },
+            { field: 'Bride / Groom', key: 'foo_2' },
+            { field: 'Wedding Date', key: 'foo_3' } // FIXME: Datepicker
+          ], //FIXME move all props to state; then remove `data` when pressed; store in `collapsed` object
+          key: 'foo',
+          title: 'Foo:'
         }
       ]
     }
+  }
+
+  _renderHeader(section, i, isActive) {
+    return (
+      <View>
+        <FormSectionHeader section={section}/>
+      </View>
+    );
+  }
+
+  _renderContent(section, i, isActive) {
+    return (
+      <View>
+        {section.data.map((item) =>
+          <FormItem key={item.key} field={item.field} secure={item.secure} keyboardType={item.keyboardType}>
+            {item.field}
+          </FormItem>
+        )}
+      </View>
+    );
+  }
+
+  _setSection(section) {
+    this.setState({ activeSection: section });
   }
 
   render() {
@@ -85,106 +123,20 @@ class Dashboard extends Component {
           </Text>
         </View>
         <View style={styles.contentBottomWrapper}>
-          <Animated.View style={styles.listWrapper}>
-            <SectionList
-              ItemSeparatorComponent={FormSeparator}
-              ListFooterComponent={ListFooter}
-              renderSectionHeader={ ({section}) => <FormSectionHeaderExpandable section={section} toggleSection={this._toggleSection}/>}
-              renderItem={this._renderItemComponent}
-              scrollEnabled={false}
+          <View style={styles.listWrapper}>
+            <Accordion
               sections={this.state.sections}
+              renderHeader={this._renderHeader}
+              renderContent={this._renderContent}
+              duration={400}
+              onChange={this._setSection.bind(this)}
               style={styles.list}
             />
-          </Animated.View>
-          <OnboardingButton
-            text="Let's Go!"
-          />
-          <OnboardingButton
-            text='Skip for Now'
-          />
+          </View>
         </View>
       </View>
     )
   }
-
-  _closeSection = (sectionIndex) => {
-    // FIXME: might need to make sure this is the max when more items are in the list
-    section = this.state.sections[sectionIndex];
-    console.log('close called')
-    if (section) {
-      let newSection = Object.assign({}, section, {
-        data: [],
-        hiddenData: (section.open ? section.data : section.hiddenData),
-        open: false
-      })
-      console.log(newSection)
-      // newSection.hiddenData = JSON.parse ( JSON.stringify(newSection.data) );
-      // newSection.data = [];
-      // newSection.open = false; // FIXME update RN to latest and try conditionally rendering section list footer OR remove bottom border on header if data is empty...yeah maybe the latter
-      this.setState({ sections: [newSection] });
-    }
-  };
-
-  _openSection = (sectionIndex) => {
-    // FIXME: might need to make sure this is the max when more items are in the list
-    section = this.state.sections[sectionIndex];
-    console.log('open called')
-    if (section) {
-      console.log('open conditional entered')
-      let newSection = Object.assign({}, section, {
-        data: (section.open ? section.data : section.hiddenData),
-        hiddenData: [],
-        open: true
-      })
-      // newSection.data = JSON.parse ( JSON.stringify(newSection.hiddenData) );
-      // newSection.hiddenData = [];
-      // newSection.open = true; // FIXME update RN to latest and try conditionally rendering section list footer OR remove bottom border on header if data is empty...yeah maybe the latter
-      console.log(newSection)
-      this.setState({ sections: [newSection] });
-    }
-  };
-
-  _toggleSection = (section) => {
-    console.log('toggle called');
-    if (section.open) {
-      console.log('open')
-      section.data = section.data.map((item) => {
-        return {
-          field: item.field,
-          key: item.key,
-          removeSection: true,//!item.removeSection,
-          section: 0
-        }
-      });
-    } else {
-      console.log('closed')
-      section.data = section.hiddenData.map((item) => {
-        return {
-          field: item.field,
-          key: item.key,
-          removeSection: false,//!item.removeSection,
-          section: 0
-        }
-      });
-    }
-    // section.open = !section.open;
-    console.log(section)
-    this.setState({ sections: [section] });
-  };
-
-  _renderItemComponent = ({item, index, section}) => {
-    // console.log(section) FIXME: When upgrading to v0.47+, see if this works; might allow cleaner code
-    return(
-    <FormItemExpandable
-      field={item.field}
-      index={index}
-      onCloseSection={this._closeSection}
-      onOpenSection={this._openSection}
-      removeSection={item.removeSection}
-      section={item.section}
-      secure={item.secure}
-    />
-  )}
 }
 
 module.exports = Dashboard;
