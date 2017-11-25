@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component } from 'react'
 import {
   Animated,
   FlatList,
@@ -8,36 +8,37 @@ import {
   Text,
   TouchableOpacity,
   View
-} from 'react-native';
+} from 'react-native'
 import Accordion from 'react-native-collapsible/Accordion'
+import { Header, Icon } from 'react-native-elements'
 
-
-import FormItemExpandable from '../../components/form_item_expandable';
-import FormItem from '../../components/form_item';
-import FormSectionHeaderExpandable from '../../components/form_section_header_expandable';
-import FormSectionHeader from '../../components/form_section_header'
-import FormSeparator from '../../components/form_separator';
-import ListFooter from '../../components/list_footer';
-import OnboardingButton from '../../components/onboarding_button';
+import AddableHeader from '../../components/addable_header'
+import ChecklistItem from '../../components/checklist_item'
+import FormItem from '../../components/form_item'
+import ExpandableHeader from '../../components/expandable_header'
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#92D6EA',
+    backgroundColor: '#FFFFFF',
     flex: 1
   },
-  contentBottomWrapper: {
+  contentWrapper: {
     alignItems: 'center',
-    flex: 0.7
-  },
-  contentTopWrapper: {
-    alignItems: 'center',
-    flex: 0.3,
-    paddingTop: 70
+    flex: 1,
+    paddingTop: 20
   },
   description: {
     fontFamily: 'Avenir',
     fontSize: 17,
     fontWeight: '300'
+  },
+  header: {
+    backgroundColor: '#92D6EA'
+  },
+  iconWrapper: {
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    flex: 1
   },
   list: {
     alignSelf: 'stretch',
@@ -65,44 +66,71 @@ class Dashboard extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      sections: [
+      months: [
         {
           data: [
-            { field: 'Bride / Groom', key: 'bride_groom_1' },
-            { field: 'Bride / Groom', key: 'bride_groom_2' },
-            { field: 'Wedding Date', key: 'date' } // FIXME: Datepicker
-          ], //FIXME move all props to state; then remove `data` when pressed; store in `collapsed` object
-          key: 'details',
-          title: 'Wedding Details:'
+            { date: '01/01/18', task: 'Build your Planning Team', id: 1, key: 't1' },
+            { date: '01/01/18', task: 'Hire wedding planner  ', id: 1, key: 't2' },
+            { date: '01/01/18', task: 'Discuss Budget', id: 1, key: 't3' },
+            { date: '01/01/18', task: 'Tour Venues ', id: 1, key: 't4' },
+            { date: '01/01/18', task: 'Pick a date', id: 1, key: 't5' },
+            { date: '01/01/18', task: 'Start Guest List', id: 1, key: 't6' },
+            { date: '01/01/18', task: 'Bridal Party Selection ', id: 1, key: 't7' },
+            { date: '01/01/18', task: 'Engagement Party ', id: 1, key: 't8' }
+          ],
+          key: 'january_2018',
+          title: 'January 2018:'
         },
         {
           data: [
-            { field: 'Bride / Groom', key: 'foo_1' },
-            { field: 'Bride / Groom', key: 'foo_2' },
-            { field: 'Wedding Date', key: 'foo_3' } // FIXME: Datepicker
-          ], //FIXME move all props to state; then remove `data` when pressed; store in `collapsed` object
-          key: 'foo',
-          title: 'Foo:'
+            { date: '01/01/18', task: 'Dress Shopping!', id: 1, key: 't9' },
+            { date: '01/01/18', task: 'Book Music', id: 1, key: 't10' },
+            { date: '01/01/18', task: 'Book Florist ', id: 1, key: 't11' },
+            { date: '01/01/18', task: 'Book Photographer & Videographer', id: 1, key: 't12' },
+            { date: '01/01/18', task: 'Think about Guest Accommodations ', id: 1, key: 't13' },
+            { date: '01/01/18', task: 'Register for gifts.', id: 1, key: 't14' },
+            { date: '01/01/18', task: 'Hire Rental company ', id: 1, key: 't15' }
+          ],
+          key: 'march_2018',
+          title: 'March 2018:'
         }
       ]
     }
   }
 
-  _renderHeader(section, i, isActive) {
+  _renderHeader(month, i, isActive) {
     return (
       <View>
-        <FormSectionHeader section={section}/>
+        <ExpandableHeader section={month}/>
       </View>
     );
   }
 
-  _renderContent(section, i, isActive) {
+  _navigateTask = () => {
+    this.props.navigation.navigate('Venue')
+  }
+
+  _renderContent(month, i, isActive) {
     return (
-      <View>
-        {section.data.map((item) =>
-          <FormItem key={item.key} field={item.field} secure={item.secure} keyboardType={item.keyboardType}>
-            {item.field}
-          </FormItem>
+      <View style={{height: month.data.length * 47}}>
+        {month.data.map((item) =>
+          <ChecklistItem
+            isChecked={false}
+            date={item.date}
+            key={item.key}
+            task={item.task}
+            rightComponent={
+              <TouchableOpacity
+                onPress={this._navigateTask.bind(this)}
+                style={styles.iconWrapper}
+              >
+                <Icon
+                  name='info-outline'
+                  type='material-icons'
+                />
+              </TouchableOpacity>
+            }
+          />
         )}
       </View>
     );
@@ -115,19 +143,19 @@ class Dashboard extends Component {
   render() {
     return (
       <View style={styles.container}>
-        <View style={styles.contentTopWrapper}>
-          <Text style={styles.title}>Dashboard</Text>
-          <Text style={styles.description}>
-            Get started by telling us{'\n'}
-            a little about your event:
-          </Text>
-        </View>
-        <View style={styles.contentBottomWrapper}>
+        <Header
+          leftComponent={{ icon: 'menu', color: '#000' }}
+          centerComponent={{ text: '276 Days to Go!', style: { color: '#000', fontFamily: 'Avenir', fontWeight: '300', fontSize: 17 } }}
+          rightComponent={{ icon: 'face', color: '#000' }}
+          outerContainerStyles={styles.header}
+        />
+        <View style={styles.contentWrapper}>
           <View style={styles.listWrapper}>
+            <AddableHeader/>
             <Accordion
-              sections={this.state.sections}
+              sections={this.state.months}
               renderHeader={this._renderHeader}
-              renderContent={this._renderContent}
+              renderContent={this._renderContent.bind(this)}
               duration={400}
               onChange={this._setSection.bind(this)}
               style={styles.list}

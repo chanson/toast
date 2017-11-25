@@ -4,6 +4,21 @@ import Landing from '../screens/Landing';
 import Signup from '../screens/Signup';
 import CoupleWelcome from '../screens/couple/CoupleWelcome'
 import CoupleDashboard from '../screens/couple/Dashboard'
+import VenueEdit from '../screens/couple/VenueEdit'
+
+export const DashboardNav = StackNavigator(
+  {
+    Dashboard: {
+      screen: CoupleDashboard
+    },
+    Venue: {
+      screen: VenueEdit
+    }
+  },
+  {
+    initialRouteName: 'Dashboard'
+  }
+)
 
 export const WelcomeNav = StackNavigator(
   {
@@ -11,7 +26,7 @@ export const WelcomeNav = StackNavigator(
       screen: CoupleWelcome
     },
     Dashboard: {
-      screen: CoupleDashboard
+      screen: DashboardNav
     }
   }
 );

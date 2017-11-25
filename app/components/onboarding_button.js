@@ -8,7 +8,7 @@ import {
 const styles = StyleSheet.create({
   button: {
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#0076FF',
     flexDirection: 'column',
     height: 44,
     justifyContent: 'center',
@@ -16,6 +16,7 @@ const styles = StyleSheet.create({
     width: 300
   },
   buttonText: {
+    color: '#FFF',
     fontFamily: 'Avenir',
     fontWeight: '300',
     fontSize: 17
