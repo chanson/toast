@@ -9,6 +9,9 @@ import {
   View
 } from 'react-native';
 
+import firebase from 'react-native-firebase';
+
+import BaseForm from '../components/base_form';
 import FormItem from '../components/form_item';
 import FormSectionHeader from '../components/form_section_header';
 import FormSeparator from '../components/form_separator';
@@ -45,9 +48,20 @@ const styles = StyleSheet.create({
   }
 });
 
-class Signup extends Component {
+class Signup extends BaseForm {
   static navigationOptions = {
     header: null
+  }
+
+  constructor() {
+    super()
+    this.ref = firebase.firestore().collection('users')
+    this.state = {
+      email: '',
+      first_name: '',
+      last_name: '',
+      password: ''
+    }
   }
 
   render() {
@@ -63,7 +77,7 @@ class Signup extends Component {
               ItemSeparatorComponent={FormSeparator}
               ListFooterComponent={ListFooter}
               renderSectionHeader={FormSectionHeader}
-              renderItem={({item}) => <FormItem field={item.field} secure={item.secure} keyboardType={item.keyboardType}/>}
+              renderItem={({item}) => <FormItem field={item.field} id={item.key} secure={item.secure} keyboardType={item.keyboardType} handleChange={this.handleChange.bind(this)}/>}
               scrollEnabled={false}
               sections={[
                 {
@@ -81,12 +95,29 @@ class Signup extends Component {
             />
           </View>
           <OnboardingButton
-            onPress={ () => { this.props.navigation.navigate('WelcomeNav') } }
+            onPress={ this._signUp }
             text='Register'
           />
         </View>
       </View>
     )
+  }
+
+  _signUp = () => {
+    const email = this.state.email.toLowerCase()
+    firebase.auth().createUserWithEmailAndPassword(email, this.state.password).
+      then((user) => {
+        user.updateProfile({ displayName: this.state.first_name + ' ' + this.state.last_name })
+        this.ref.doc(user.uid).set({
+          user_auth_uid: user.uid,
+          completed_ftu: false,
+          completed_ftu_at: null,
+          email: email,
+          first_name: this.state.first_name,
+          last_name: this.state.last_name
+        }).then((doc) => console.log('user created'))
+      }).
+      catch((error) => console.log(error)) // FIXME: do something with the error, e.g. "email already taken"
   }
 
   _renderItemComponent = ({item}) => (

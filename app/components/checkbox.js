@@ -1,10 +1,11 @@
-import React, { Component } from 'react';
+import React, { Component } from 'react'
 import {
   StyleSheet,
   View
-} from 'react-native';
-import PropTypes from 'prop-types';
-import { CheckBox, } from 'react-native-elements'
+} from 'react-native'
+import PropTypes from 'prop-types'
+import { CheckBox } from 'react-native-elements'
+import firebase from 'react-native-firebase'
 
 
 const styles = StyleSheet.create({
@@ -52,10 +53,15 @@ class Checkbox extends Component {
   }
 
   _handleCheck = () => {
-    console.log('changing')
     this.setState({
       checked: !this.state.checked
-    }, () => console.log(this.state))
+    }, () => {
+      firebase.
+        firestore().
+        collection('wedding_todos').
+        doc(this.props.id).
+        update({ complete: this.state.checked })
+    })
   }
 
   render() {

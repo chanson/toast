@@ -47,6 +47,7 @@ class ChecklistItem extends Component {
       <View style={styles.row}>
         <Checkbox
           containerStyle={styles.checkbox}
+          id={this.props.id}
           isChecked={this.props.isChecked}
           checkedIcon='check-circle'
           uncheckedIcon='check-circle-o'

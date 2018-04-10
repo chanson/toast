@@ -6,22 +6,100 @@
 
 import React, { Component } from 'react';
 import {
+  ActivityIndicator,
   AppRegistry,
   StyleSheet,
   Text,
   View
 } from 'react-native';
 
-import * as firebase from 'firebase';
-import { LandingNav } from './app/config/router'
+// import * as firebase from 'firebase';
+import firebase from 'react-native-firebase';
+import {
+  DashboardNav,
+  LandingNav,
+  WelcomeNav
+} from './app/config/router'
 
 // Initialize Firebase
-const firebaseConfig = {
-  apiKey: "<your-api-key>",
-  authDomain: "<your-auth-domain>",
-  databaseURL: "<your-database-url>",
-  storageBucket: "<your-storage-bucket>"
-};
-const firebaseApp = firebase.initializeApp(firebaseConfig);
+// const firebaseConfig = {
+//   apiKey: 'AIzaSyCeiT2beh_u3J3spqGDVuLU3pCNxw_RLIA',
+//   authDomain: 'toast-1821c.firebaseapp.com',
+//   databaseURL: 'https://toast-1821c.firebaseio.com',
+//   projectId: 'toast-1821c',
+//   storageBucket: 'toast-1821c.appspot.com',
+//   messagingSenderId: '850874118372'
+// };
+// const firebaseApp = firebase.initializeApp(firebaseConfig);
 
-AppRegistry.registerComponent('Toast', () => LandingNav);
+class App extends React.Component {
+
+  constructor() {
+    super();
+    this.unsubscriber = null;
+    this.state = {
+      authUser: null,
+      loading: false
+    };
+  }
+
+  /**
+   * Listen for any auth state changes and update component state
+   */
+  componentDidMount() {
+    this.unsubscriber = firebase.auth().onAuthStateChanged((authUser) => {
+      this.setState({
+        ...this.state,
+        authUser: authUser,
+        loading: true
+      }, () => {
+        if (!this.state.authUser) {
+          this.setState({
+            ...this.state,
+            user: null,
+            loading: false
+          })
+        } else {
+          firebase.firestore().collection('users').doc(this.state.authUser.uid).get().then((user) => {
+            console.log('ftu: ' + user.data().completed_ftu)
+            console.log(user)
+            this.setState({
+              ...this.state,
+              completedFtu: user.data().completed_ftu,
+              loading: false,
+              user: user,
+            })
+          })
+        }
+      })
+    });
+  }
+
+  componentWillUnmount() {
+    if (this.unsubscriber) {
+      this.unsubscriber();
+    }
+  }
+
+  render() {
+    if (this.state.loading) {
+      // FIXME: make this prettier
+      return(
+        <View>
+          <ActivityIndicator size='large' color='#0000ff' />
+        </View>
+      )
+    } else if (!this.state.authUser) {
+      return <LandingNav />
+    } else if (!this.state.completedFtu) {
+      return <WelcomeNav screenProps={{ user: this.state.user }} />
+    } else {
+      return (
+        <DashboardNav />
+      );
+    }
+  }
+}
+
+
+AppRegistry.registerComponent('Toast', () => App);

@@ -60,6 +60,7 @@ class Landing extends Component {
           />
           <OnboardingButton
             text='Log In'
+            onPress={() => this.props.navigation.navigate('Login')}
           />
         </View>
       </View>

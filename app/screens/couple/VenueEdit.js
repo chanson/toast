@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 import {
+  ActivityIndicator,
+  Button,
   Image,
   ListItem,
   SectionList,
@@ -8,11 +10,13 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-import { Header } from 'react-native-elements'
+import { Icon } from 'react-native-elements'
+import firebase from 'react-native-firebase'
+import moment from 'moment'
 
 import AddableHeader from '../../components/addable_header'
+import BaseForm from '../../components/base_form'
 import ChecklistItem from '../../components/checklist_item'
-
 import FormItem from '../../components/form_item';
 import FormSectionHeader from '../../components/form_section_header';
 import FormSeparator from '../../components/form_separator';
@@ -28,20 +32,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 20
   },
-  description: {
-    fontFamily: 'Avenir',
-    fontSize: 17,
-    fontWeight: '300'
-  },
-  header: {
-    backgroundColor: '#92D6EA'
-  },
-  headerText: {
-    color: '#000',
-    fontFamily: 'Avenir',
-    fontSize: 17,
-    fontWeight: '300'
-  },
   dollarsWrapper: {
     alignItems: 'flex-end',
     justifyContent: 'center',
@@ -53,75 +43,209 @@ const styles = StyleSheet.create({
   },
   listWrapper: {
     flexDirection: 'row'
-  },
-  title: {
-    fontFamily: 'Avenir',
-    fontSize: 48,
-    fontWeight: '300',
-    paddingBottom: 15
   }
 });
 
-class VenueEdit extends Component {
-  static navigationOptions = {
-    header: null
+class VenueEdit extends BaseForm {
+  static navigationOptions = ({ navigation }) => {
+    const params = navigation.state.params || {};
+
+    return {
+      headerRight: (
+        <TouchableOpacity style={{ flex: 1, flexDirection: 'row' }} onPress={ params.submitForm }>
+          <Text>Save</Text>
+          <Icon name='check' color='#000'/>
+        </TouchableOpacity>
+      ),
+      headerStyle: {
+        backgroundColor: '#92D6EA',
+        paddingHorizontal: 15,
+      },
+      headerTintColor: '#000',
+      headerTitleStyle: {
+        fontFamily: 'Avenir',
+        fontWeight: '300',
+        fontSize: 17
+      },
+      title: 'The Venue - Edit',
+      headerBackTitleStyle: {
+        fontFamily: 'Avenir',
+        fontWeight: '300',
+        fontSize: 17
+      }
+    }
   }
 
   constructor(props) {
     super(props)
+
+    this.state = {
+      loaded: true,
+      todo: undefined,
+      company_name: '',
+      contact_name: '',
+      email: '',
+      address: '',
+      city: '',
+      state: '',
+      zip: '',
+      payments: []
+    }
   }
 
-  render() {
-    return (
-      <View style={styles.container}>
-        <Header
-          leftComponent={{ text: 'Cancel', style: styles.headerText }}
-          centerComponent={{ text: 'The Venue - Edit', style: styles.headerText }}
-          rightComponent={{ text: 'Save', style: styles.headerText }}
-          outerContainerStyles={styles.header}
-        />
-        <View style={styles.contentWrapper}>
-          <View style={styles.listWrapper}>
-            <SectionList
-              ItemSeparatorComponent={FormSeparator}
-              ListFooterComponent={ListFooter}
-              renderSectionHeader={FormSectionHeader}
-              renderItem={({item}) => <FormItem field={item.field} secure={item.secure} keyboardType={item.keyboardType}/>}
-              scrollEnabled={false}
-              sections={[
-                {
-                  data: [
-                    { field: 'Facility Name', key: 'facility_name' },
-                    { field: 'Contact Name', key: 'contact_name' },
-                    { field: 'Contact Email', keyboardType: 'email-address', key: 'email' },
-                    { field: 'Address', key: 'address' },
-                    { field: 'City', key: 'city' },
-                    { field: 'State', key: 'state' },
-                    { field: 'Zip', key: 'zip' }
-                  ],
-                  key: 'details',
-                  title: 'Vendor Details:'
-                }
-              ]}
-              style={styles.list}
-            />
-          </View>
-          <AddableHeader/>
-          <View style={[styles.list, {height: 47}]}>
+  _setVendorDetails = ( vendorId ) => {
+    this.state.todo.update({
+      vendor_details: {
+        company_name: this.state.company_name,
+        contact_name: this.state.contact_name,
+        email: this.state.email,
+        address: this.state.address,
+        city: this.state.city,
+        state: this.state.state,
+        zip: this.state.zip,
+      },
+      vendor_id: vendorId
+    })
+  }
+
+  _submitForm = () => {
+    // FIXME: Add loader here before kicking off firestore request
+    email = this.state.email.toLowerCase()
+    firebase.firestore().collection('vendors').where('email', '==', email).get().then((docs) => {
+      if(docs.docs.length > 0) {
+        this._setVendorDetails(docs.docs[0].uid)
+      } else {
+        firebase.firestore().collection('vendors').add({
+          email: email,
+          name: this.state.contact_name,
+          company: this.state.company_name
+        }).then((vendor) => {
+          this._setVendorDetails(vendor.id)
+        })
+      }
+    })
+  }
+
+  componentDidMount() {
+    this.props.navigation.setParams({ submitForm: this._submitForm.bind(this) });
+    const todoId = this.props.navigation.state.params.todoId
+    firebase.firestore().collection('wedding_todos').doc(todoId).get().then((todo) => {
+      const vendorInfo = todo.data().vendor_details || {}
+      let payments = [] //FIXME: make const
+
+      firebase.firestore().collection('wedding_todos').where('parent_id', '==', todoId).get().then((docs) => {
+        docs.forEach((doc) => {
+          const payment = doc.data()
+          console.log(payment)
+          const data = {
+            complete: payment.complete,
+            id: doc.id,
+            key: doc.id,
+            date: payment.date,
+            task: payment.text
+          }
+
+          payments = payments.concat(data)
+        })
+
+        this.setState({
+          ...this.state,
+          todo: todo.ref,
+          loaded: true,
+          company_name: vendorInfo.company_name,
+          contact_name: vendorInfo.contact_name,
+          email: vendorInfo.email,
+          address: vendorInfo.address,
+          city: vendorInfo.city,
+          state: vendorInfo.state,
+          zip: vendorInfo.zip,
+          payments: payments
+        })
+      })
+    })
+  }
+
+  _renderPayments = () => {
+    return(
+      this.state.payments.map((payment) => {
+        return (
+          <View key={payment.id} style={[styles.list, { height: 47 }]}>
             <ChecklistItem
-              isChecked={false}
-              key='pay1'
-              task='04/01/18'
+              isChecked={payment.complete}
+              key={payment.id}
+              task={moment(payment.date).format('MM/DD/YYYY')}
               rightComponent={
                 <View style={styles.dollarsWrapper}>
-                  <Text>$200</Text>
+                  <Text>${payment.task}</Text>
                 </View>
               }
             />
           </View>
-        </View>
-      </View>
+        )
+      })
     )
+  }
+
+  render() {
+    if(!this.state.loaded) {
+      return(
+        <View style={styles.container}>
+          <View style={styles.contentWrapper}>
+            <ActivityIndicator size='large' color='#0000ff' />
+          </View>
+        </View>
+      )
+    } else {
+      return (
+        <View style={styles.container}>
+          <View style={styles.contentWrapper}>
+            <View style={styles.listWrapper}>
+              <SectionList
+                ItemSeparatorComponent={FormSeparator}
+                ListFooterComponent={ListFooter}
+                renderSectionHeader={FormSectionHeader}
+                renderItem={({item}) => {
+                    return(
+                      <FormItem
+                        initialValue={this.state[item.key]}
+                        field={item.field}
+                        id={item.key}
+                        secure={item.secure}
+                        keyboardType={item.keyboardType}
+                        handleChange={this.handleChange.bind(this)}
+                      />
+                    )
+                  }
+                }
+                scrollEnabled={false}
+                sections={[
+                  {
+                    data: [
+                      { field: 'Company Name', key: 'company_name' },
+                      { field: 'Contact Name', key: 'contact_name' },
+                      { field: 'Contact Email', keyboardType: 'email-address', key: 'email' },
+                      { field: 'Address', key: 'address' },
+                      { field: 'City', key: 'city' },
+                      { field: 'State', key: 'state' },
+                      { field: 'Zip', key: 'zip' }
+                    ],
+                    key: 'details',
+                    title: 'Vendor Details:'
+                  }
+                ]}
+                style={styles.list}
+              />
+            </View>
+            <AddableHeader
+              title='Payments:'
+              navigation={this.props.navigation}
+              parentId={this.props.navigation.state.params.todoId}
+            />
+            {this._renderPayments()}
+          </View>
+        </View>
+      )
+    }
   }
 }
 
