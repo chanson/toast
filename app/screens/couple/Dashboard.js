@@ -72,12 +72,23 @@ class Dashboard extends Component {
     this._navigateTask = this._navigateTask.bind(this);
     this.state = {
       loaded: false,
-      months: []
+      months: [],
+      wedding: undefined
     }
   }
 
   componentDidMount() {
-    this._buildChecklists()
+    // FIXME: move wedding finding logic to util; maybe wrap in promise?
+    firebase.firestore().collection('weddings').where('user_id', '==', firebase.auth().currentUser.uid).get().then((wedding) => {
+      if(wedding != undefined) {
+        this.setState({
+          ...this.state,
+          wedding: wedding.docs[0].data()
+        }, () => this._buildChecklists())
+      } else {
+        this._buildChecklists()
+      }
+    })
   }
 
   _buildChecklists() {
@@ -89,11 +100,14 @@ class Dashboard extends Component {
     firebase.firestore().collection('wedding_todos').where('user_id', '==', firebase.auth().currentUser.uid).get().then((item) => {
       item.forEach((doc) => {
         const todo = doc.data()
-        let dueDate = moment().add(todo.days_before_wedding, 'days')
+        let dueDate = moment().add(1, 'y').subtract(todo.days_before_wedding, 'days')
+
+        if(this.state.wedding !== undefined && this.state.wedding.date !== undefined) {
+          dueDate = moment(this.state.wedding.date, 'MM/DD/YYYY').subtract(todo.days_before_wedding, 'days')
+        }
 
         if(todo.date !== undefined && todo.date !== '' && todo.date !== null) {
-          console.log(todo.date)
-          dueDate = moment(todo.date)//, 'MM/DD/YYYY')
+          dueDate = moment(todo.date, 'MM/DD/YYYY')
         }
         const dateKey = dueDate.format('MMMM[_]YYYY')
         const data = {
@@ -118,7 +132,7 @@ class Dashboard extends Component {
         }
       })
 
-      const formattedMonths = Object.keys(months).map(function(key) {
+      const formattedMonths = Object.keys(months).sort().map(function(key) {
         return {
           data: months[key],
           key: key,
@@ -152,13 +166,15 @@ class Dashboard extends Component {
         {month.data.map((item) => {
           // FIXME: move date logic to util
           let diffBound = 'months'
-          const base = firebase.auth().currentUser.createdAt
-          const baseDate = moment(base)
+          let baseDate = moment().add(1, 'y') // FIXME: should this be one year from user creation?
+          if(this.state.wedding !== undefined && this.state.wedding.date !== undefined) {
+            baseDate = moment(this.state.wedding.date, 'MM/DD/YYYY')
+          }
           let dueDate = item.date
           let displayDate = ''
 
           if(dueDate == undefined || dueDate == null ) {
-            dueDate = moment(base).add(item.daysBefore, 'days')
+            dueDate = moment(this.state.wedding.date, 'MM/DD/YYYY').subtract(item.daysBefore, 'days')
 
             if (item.daysBefore < 14) {
               diffBound = 'days'
@@ -167,12 +183,10 @@ class Dashboard extends Component {
             } else {
               diffBound = 'months'
             }
-
-            displayDate = `${dueDate.diff(baseDate, diffBound)} ${diffBound} before`
+            displayDate = `${baseDate.diff(dueDate, diffBound)} ${diffBound} before`
           } else {
             displayDate = moment(dueDate).format('MM/DD/YYYY')
           }
-
 
           return (
             <ChecklistItem

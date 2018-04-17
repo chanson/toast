@@ -11,6 +11,9 @@ import { TextField } from 'react-native-material-textfield'
 import moment from 'moment'
 
 const styles = StyleSheet.create({
+  error: {
+    marginLeft: 25
+  },
   header: {
     backgroundColor: '#EBF3F6'
   },
@@ -23,31 +26,50 @@ const styles = StyleSheet.create({
     height: 44
   },
   input: {
-    borderBottomWidth: 0,
-    marginLeft: 25
+    marginLeft: 25,
+    borderBottomWidth: 1
+  },
+  inputNoError: {
+    borderBottomWidth: 0
   }
 })
 
 class FormItem extends Component {
   constructor(props) {
     super(props)
-    this.state = { text: props.initialValue }
+    this.state = { text: props.initialValue, error: props.error }
   }
 
   componentWillReceiveProps(nextProps) {
+    let newState = {}
+
     if(this.state.text == undefined || this.state.text == '') {
-      this.setState({ text: nextProps.initialValue });
+      newState['text'] = nextProps.initialValue
     }
+
+    this.setState({
+      ...this.state,
+      ...newState,
+      error: nextProps.error
+    })
   }
 
   _updateForm = (text) => {
-    this.setState({ text }, () => {
+    this.setState({ ...this.state, text: text }, () => {
       this.props.handleChange(text, this.props.id)
     })
   }
 
   _openDatePicker = () => {
     this.datepicker.onPressDate()
+  }
+
+  _inputStyle = () => {
+    if(this.state.error == '' || this.state.error == undefined) {
+      return [styles.input, styles.inputNoError]
+    } else {
+      return styles.input
+    }
   }
 
   render() {
@@ -76,10 +98,12 @@ class FormItem extends Component {
             keyboardType={this.props.keyboardType}
             label={this.props.field}
             labelHeight={18}
-            inputContainerStyle={styles.input}
-            inputContainerPadding={0}
+            inputContainerStyle={this._inputStyle()}
+            inputContainerPadding={this.state.error == '' ? 0 : 5}
             secureTextEntry={this.props.secure}
             value={this.state.text}
+            titleTextStyle={styles.error}
+            error={this.state.error}
             onFocus={this._openDatePicker.bind(this)}
           />
         </View>
@@ -88,11 +112,13 @@ class FormItem extends Component {
       return(
         <View style={styles.header}>
           <TextField
+            error={this.state.error}
             keyboardType={this.props.keyboardType}
             label={this.props.field}
             labelHeight={18}
-            inputContainerStyle={styles.input}
-            inputContainerPadding={0}
+            titleTextStyle={styles.error}
+            inputContainerStyle={this._inputStyle()}
+            inputContainerPadding={this.state.error == '' ? 0 : 5}
             onChangeText={ this._updateForm }
             secureTextEntry={this.props.secure}
             value={this.state.text}

@@ -36,7 +36,7 @@ const goToAddTodo = ( navigation, parentId ) => {
   navigation.navigate('NewTodo', { parentId: parentId })
 }
 
-const AddableHeader = ({title, navigation, parentId}) => (
+const AddableHeader = ({ title, navigation, parentId }) => (
   <View style={styles.header}>
     <View style={styles.textWrapper}>
       <Text style={styles.text}>{title}</Text>

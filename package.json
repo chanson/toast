@@ -7,6 +7,7 @@
 		"test": "jest"
 	},
 	"dependencies": {
+		"email-validator": "^2.0.3",
 		"firebase": "^4.3.1",
 		"react": "16.0.0-alpha.6",
 		"react-native": "0.44.0",
@@ -16,7 +17,7 @@
 		"react-native-firebase": "^3.2.0",
 		"react-native-material-textfield": "^0.10.0",
 		"react-native-vector-icons": "^4.4.2",
-		"react-navigation": "^1.5.8"
+		"react-navigation": "^1.5.11"
 	},
 	"devDependencies": {
 		"babel-jest": "21.0.2",

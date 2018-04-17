@@ -41,19 +41,19 @@ const styles = StyleSheet.create({
 });
 
 class TodoForm extends BaseForm {
-  static navigationOptions = {
-    headerStyle: {
-      backgroundColor: '#92D6EA',
-      paddingHorizontal: 15
-    },
-    headerTintColor: '#000',
-    headerTitleStyle: {
-      fontFamily: 'Avenir',
-      fontWeight: '300',
-      fontSize: 17
-    },
-    title: 'New Task'
-  }
+  // static navigationOptions = {
+  //   headerStyle: {
+  //     backgroundColor: '#92D6EA',
+  //     paddingHorizontal: 15
+  //   },
+  //   headerTintColor: '#000',
+  //   headerTitleStyle: {
+  //     fontFamily: 'Avenir',
+  //     fontWeight: '300',
+  //     fontSize: 17
+  //   },
+  //   title: 'New Task'
+  // }
 
   constructor(props) {
     super(props)

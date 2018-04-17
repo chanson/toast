@@ -62,7 +62,12 @@ class CoupleWelcome extends BaseForm {
     this.state = {
       bride_groom_1: '',
       bride_groom_2: '',
-      date: ''
+      date: '',
+      errors: {
+        bride_groom_1: '',
+        bride_groom_2: '',
+        date: ''
+      }
     }
   }
 
@@ -82,14 +87,21 @@ class CoupleWelcome extends BaseForm {
               ItemSeparatorComponent={FormSeparator}
               ListFooterComponent={ListFooter}
               renderSectionHeader={FormSectionHeader}
-              renderItem={({item}) => <FormItem field={item.field} id={item.key} secure={item.secure} keyboardType={item.keyboardType} handleChange={this.handleChange.bind(this)}/>}
+              renderItem={({item}) => <FormItem
+                field={item.field}
+                id={item.key}
+                secure={item.secure}
+                error={this.state.errors[item.key]}
+                datepicker={item.datepicker}
+                keyboardType={item.keyboardType}
+                handleChange={this.handleChange.bind(this)}/>}
               scrollEnabled={false}
               sections={[
                 {
                   data: [
                     { field: 'Bride / Groom', key: 'bride_groom_1' },
                     { field: 'Bride / Groom', key: 'bride_groom_2' },
-                    { field: 'Wedding Date', key: 'date', datepicker: ture }
+                    { field: 'Wedding Date', key: 'date', datepicker: true }
                   ],
                   key: 'details',
                   title: 'Wedding Details:'
@@ -99,7 +111,7 @@ class CoupleWelcome extends BaseForm {
             />
           </View>
           <OnboardingButton
-            onPress={ this._createWedding.bind(this) }
+            onPress={ this._validateFormAndCreateWedding.bind(this) }
             text="Let's Go!"
           />
           <OnboardingButton
@@ -119,7 +131,31 @@ class CoupleWelcome extends BaseForm {
       date: this.state.date
     }).then((wedding) => {
       this.props.screenProps.user.ref.update({ wedding_id: wedding.id, completed_ftu: true, completed_ftu_at: new Date() })
-      this.props.navigation.navigate('Dashboard')
+      this.props.navigation.navigate('DashboardNav')
+    })
+  }
+
+  _validateFormAndCreateWedding = () => {
+    let errors = {}
+    const requiredFields = ['date']
+
+    requiredFields.forEach((field) => {
+      if(this.state[field] == '') {
+        errors[field] = "can't be blank"
+      } else {
+        errors[field] = ''
+      }
+    })
+
+    this.setState({
+      ...this.state,
+      errors: errors
+    }, () => {
+      if(Object.values(this.state.errors).some((val) => val != '')) {
+        return
+      } else {
+        this._createWedding()
+      }
     })
   }
 }

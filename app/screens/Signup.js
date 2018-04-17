@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 
 import firebase from 'react-native-firebase';
+import * as EmailValidator from 'email-validator'
 
 import BaseForm from '../components/base_form';
 import FormItem from '../components/form_item';
@@ -60,7 +61,13 @@ class Signup extends BaseForm {
       email: '',
       first_name: '',
       last_name: '',
-      password: ''
+      password: '',
+      errors: {
+        email: '',
+        first_name: '',
+        last_name: '',
+        password: ''
+      }
     }
   }
 
@@ -77,15 +84,22 @@ class Signup extends BaseForm {
               ItemSeparatorComponent={FormSeparator}
               ListFooterComponent={ListFooter}
               renderSectionHeader={FormSectionHeader}
-              renderItem={({item}) => <FormItem field={item.field} id={item.key} secure={item.secure} keyboardType={item.keyboardType} handleChange={this.handleChange.bind(this)}/>}
+              renderItem={({item}) =>
+                <FormItem
+                  field={item.field}
+                  id={item.key}
+                  error={this.state.errors[item.key]}
+                  secure={item.secure}
+                  keyboardType={item.keyboardType}
+                  handleChange={this.handleChange.bind(this)}/>}
               scrollEnabled={false}
               sections={[
                 {
                   data: [
-                    { field: 'First Name', key: 'first_name' },
-                    { field: 'Last Name', key: 'last_name' },
-                    { field: 'Email Address', keyboardType: 'email-address', key: 'email' },
-                    { field: 'Password', secure: true, key: 'password' }
+                    { field: 'First Name', key: 'first_name', required: true },
+                    { field: 'Last Name', key: 'last_name', required: true },
+                    { field: 'Email Address', keyboardType: 'email-address', key: 'email', required: true },
+                    { field: 'Password', secure: true, key: 'password', required: true }
                   ],
                   key: 'signup',
                   title: 'Sign Up:'
@@ -95,7 +109,7 @@ class Signup extends BaseForm {
             />
           </View>
           <OnboardingButton
-            onPress={ this._signUp }
+            onPress={ this._validateFormAndSignUp }
             text='Register'
           />
         </View>
@@ -118,6 +132,50 @@ class Signup extends BaseForm {
         }).then((doc) => console.log('user created'))
       }).
       catch((error) => console.log(error)) // FIXME: do something with the error, e.g. "email already taken"
+  }
+
+  _validateFormAndSignUp = () => {
+    let errors = {}
+    const requiredFields = ['first_name', 'last_name', 'email', 'password']
+
+    requiredFields.forEach((field) => {
+      if(this.state[field] == '') {
+        errors[field] = "can't be blank"
+      } else {
+        errors[field] = ''
+      }
+    })
+
+    if(this.state.password.length > 0 && this.state.password.length < 8) {
+      const passwordLengthError = 'must be 8 characters or longer'
+
+      if(this.state.errors.password == '') {
+        errors.password = passwordLengthError
+      } else {
+        errors.password = errors.password + '; ' + passwordLengthError
+      }
+    }
+
+    if(this.state.email.length > 0 && !EmailValidator.validate(this.state.email)) {
+      const invalidEmailError = 'must be a valid email'
+
+      if(this.state.errors.email == '') {
+        errors.email = invalidEmailError
+      } else {
+        errors.email = errors.email + '; ' + invalidEmailError
+      }
+    }
+
+    this.setState({
+      ...this.state,
+      errors: errors
+    }, () => {
+      if(Object.values(this.state.errors).some((val) => val != '')) {
+        return
+      } else {
+        this._signUp()
+      }
+    })
   }
 
   _renderItemComponent = ({item}) => (

@@ -48,6 +48,8 @@ const styles = StyleSheet.create({
 
 class VenueEdit extends BaseForm {
   static navigationOptions = ({ navigation }) => {
+    console.log("navigation: ")
+    console.log(navigation)
     const params = navigation.state.params || {};
 
     return {
@@ -136,7 +138,7 @@ class VenueEdit extends BaseForm {
       firebase.firestore().collection('wedding_todos').where('parent_id', '==', todoId).get().then((docs) => {
         docs.forEach((doc) => {
           const payment = doc.data()
-          console.log(payment)
+
           const data = {
             complete: payment.complete,
             id: doc.id,

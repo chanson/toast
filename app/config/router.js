@@ -94,7 +94,7 @@ export const VendorNav = StackNavigator(
 
 export const DashboardNav = StackNavigator(
   {
-    Dashboard: {
+    DashboardRoot: {
       screen: DrawerStack
     },
     Venue: {
@@ -105,7 +105,7 @@ export const DashboardNav = StackNavigator(
     }
   },
   {
-    initialRouteName: 'Dashboard'
+    initialRouteName: 'DashboardRoot'
   }
 )
 
@@ -114,7 +114,7 @@ export const WelcomeNav = StackNavigator(
     CoupleWelcome: {
       screen: CoupleWelcome
     },
-    Dashboard: {
+    DashboardNav: {
       screen: DashboardNav
     }
   },
