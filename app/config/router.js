@@ -5,10 +5,11 @@ import Login from '../screens/Login'
 import Signup from '../screens/Signup'
 import CoupleWelcome from '../screens/couple/CoupleWelcome'
 import CoupleDashboard from '../screens/couple/Dashboard'
-import VenueEdit from '../screens/couple/VenueEdit'
+import VendorEdit from '../screens/couple/VendorEdit'
 import NewTodo from '../screens/couple/NewTodo'
 import NewPayment from '../screens/couple/NewPayment'
 import LogOut from '../screens/drawer/LogOut'
+import TodoNotes from '../screens/couple/TodoNotes'
 
 import {
   ScrollView,
@@ -80,7 +81,7 @@ const DrawerStack = DrawerNavigator(
 export const VendorNav = StackNavigator(
   {
     Vendor: {
-      screen: VenueEdit
+      screen: VendorEdit
     },
     NewTodo: {
       screen: NewPayment
@@ -97,11 +98,14 @@ export const DashboardNav = StackNavigator(
     DashboardRoot: {
       screen: DrawerStack
     },
-    Venue: {
+    Vendor: {
       screen: VendorNav
     },
     NewTodo: {
       screen: NewTodo
+    },
+    TodoNotes: {
+      screen: TodoNotes
     }
   },
   {

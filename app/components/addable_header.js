@@ -32,16 +32,16 @@ const styles = StyleSheet.create({
   }
 });
 
-const goToAddTodo = ( navigation, parentId ) => {
-  navigation.navigate('NewTodo', { parentId: parentId })
+const goToAddTodo = ( navigation, parentId, vendorId ) => {
+  navigation.navigate('NewTodo', { parentId: parentId, vendorId: vendorId })
 }
 
-const AddableHeader = ({ title, navigation, parentId }) => (
+const AddableHeader = ({ title, navigation, parentId, vendorId }) => (
   <View style={styles.header}>
     <View style={styles.textWrapper}>
       <Text style={styles.text}>{title}</Text>
     </View>
-    <TouchableOpacity style={styles.iconWrapper} onPress={() => goToAddTodo(navigation, parentId)}>
+    <TouchableOpacity style={styles.iconWrapper} onPress={() => goToAddTodo(navigation, parentId, vendorId)}>
       <Icon
         name='add-circle-outline'
         type='material-icons'

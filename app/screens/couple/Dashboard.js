@@ -116,7 +116,8 @@ class Dashboard extends Component {
           complete: todo.complete,
           id: doc.id,
           key: doc.id,
-          task: todo.text
+          task: todo.text,
+          isVendor: todo.vendor
         }
 
         let monthDate = months[dateKey]
@@ -156,8 +157,12 @@ class Dashboard extends Component {
     );
   }
 
-  _navigateTask = (id) => {
-    this.props.navigation.navigate('Venue', { todoId: id })
+  _navigateTask = (id, isVendor) => {
+    if (isVendor) {
+      this.props.navigation.navigate('Vendor', { todoId: id })
+    } else {
+      this.props.navigation.navigate('TodoNotes', { todoId: id })
+    }
   }
 
   _renderContent(month, i, isActive) {
@@ -197,7 +202,7 @@ class Dashboard extends Component {
               task={item.task}
               rightComponent={
                 <TouchableOpacity
-                  onPress={() => this._navigateTask(item.id)}
+                  onPress={() => this._navigateTask(item.id, item.isVendor)}
                   style={styles.iconWrapper}
                 >
                   <Icon

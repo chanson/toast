@@ -117,10 +117,10 @@ class TodoForm extends BaseForm {
         days_before_wedding: daysBeforeWedding,
         complete: false,
         vendor: false, // FIXME: add vendor toggle
-        vendor_id: undefined,
+        vendor_id: this.props.navigation.state.params.vendorId,
         parent_id: this.props.navigation.state.params.parentId
       }).then(() => {
-        this.props.navigation.navigate('Dashboard')
+        this.props.navigation.goBack(this.props.navigation.state.key)
       })
     })
   }
