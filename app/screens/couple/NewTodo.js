@@ -1,29 +1,42 @@
-import React, { Component } from 'react';
+import React, { Component } from 'react'
+import {
+  Text,
+  TouchableOpacity
+} from 'react-native'
 
-import TodoForm from '../../components/todo_form'
+import TodoForm from 'app/components/todo_form'
 
 class NewTodo extends Component {
-  static navigationOptions = {
-    headerStyle: {
-      backgroundColor: '#92D6EA',
-      paddingHorizontal: 15
-    },
-    headerTintColor: '#000',
-    headerTitleStyle: {
-      fontFamily: 'Avenir',
-      fontWeight: '300',
-      fontSize: 17
-    },
-    title: 'New Task'
+  static navigationOptions = ({ navigation }) => {
+    return {
+      headerLeft: (
+        <TouchableOpacity onPress={() => {
+          navigation.goBack(navigation.state.key)
+        } }>
+          <Text>Back</Text>
+        </TouchableOpacity>
+      ),
+      headerStyle: {
+        backgroundColor: '#92D6EA',
+        paddingHorizontal: 15
+      },
+      headerTintColor: '#000',
+      headerTitleStyle: {
+        fontFamily: 'Avenir',
+        fontWeight: '300',
+        fontSize: 17
+      },
+      title: 'New Todo'
+    }
   }
 
   render() {
     return (
       <TodoForm
         navigation={this.props.navigation}
-        todoName='Name'
-        title='Add New Task:'
         submitText='Add Task'
+        title='Add New Task:'
+        todoName='Name'
       />
     )
   }

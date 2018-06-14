@@ -9,10 +9,9 @@ import { Icon } from 'react-native-elements'
 
 const styles = StyleSheet.create({
   header: {
-    backgroundColor: '#B3D5D6',
+    backgroundColor: '#EBF3F6',
     borderColor: '#CCCCCC',
     borderBottomWidth: 1,
-    borderTopWidth: 1,
     paddingHorizontal: 15,
     height: 47,
     flexDirection: 'row',
@@ -32,24 +31,18 @@ const styles = StyleSheet.create({
   }
 });
 
-const goToAddTodo = ( navigation, parentId, vendorId, weddingId ) => {
-  navigation.navigate('NewTodo', { parentId: parentId, vendorId: vendorId, weddingId: weddingId })
+const goToAddTodo = ( navigation, parentId, vendorId, weddingId, hideAddVendor ) => {
+  navigation.navigate('NewTodoLandingNav', { parentId: parentId, vendorId: vendorId, weddingId: weddingId, hideAddVendor: hideAddVendor })
 }
 
-const AddableHeader = ({ title, navigation, parentId, vendorId, weddingId, goToAdd }) => (
+const AddableRow = ({ title, navigation, parentId, vendorId, weddingId, hideAddVendor, }) => (
   <View style={styles.header}>
     <View style={styles.textWrapper}>
       <Text style={styles.text}>{title}</Text>
     </View>
     <TouchableOpacity
       style={styles.iconWrapper}
-      onPress={() => {
-        if(goToAdd == undefined) {
-          goToAddTodo(navigation, parentId, vendorId, weddingId)
-        } else {
-          goToAdd()
-        }
-      }}
+      onPress={() => { goToAddTodo(navigation, parentId, vendorId, weddingId, hideAddVendor) }}
     >
       <Icon
         name='add-circle-outline'
@@ -59,4 +52,4 @@ const AddableHeader = ({ title, navigation, parentId, vendorId, weddingId, goToA
   </View>
 );
 
-export default AddableHeader;
+export default AddableRow;

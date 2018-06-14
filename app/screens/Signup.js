@@ -62,11 +62,13 @@ class Signup extends BaseForm {
       first_name: '',
       last_name: '',
       password: '',
+      vendor: false,
       errors: {
         email: '',
         first_name: '',
         last_name: '',
-        password: ''
+        password: '',
+        vendor: ''
       }
     }
   }
@@ -89,6 +91,7 @@ class Signup extends BaseForm {
                   field={item.field}
                   id={item.key}
                   error={this.state.errors[item.key]}
+                  checkbox={item.checkbox}
                   secure={item.secure}
                   keyboardType={item.keyboardType}
                   handleChange={this.handleChange.bind(this)}/>}
@@ -99,7 +102,8 @@ class Signup extends BaseForm {
                     { field: 'First Name', key: 'first_name', required: true },
                     { field: 'Last Name', key: 'last_name', required: true },
                     { field: 'Email Address', keyboardType: 'email-address', key: 'email', required: true },
-                    { field: 'Password', secure: true, key: 'password', required: true }
+                    { field: 'Password', secure: true, key: 'password', required: true },
+                    { field: 'I am a Vendor', key: 'vendor', checkbox: true }
                   ],
                   key: 'signup',
                   title: 'Sign Up:'
@@ -128,8 +132,16 @@ class Signup extends BaseForm {
           completed_ftu_at: null,
           email: email,
           first_name: this.state.first_name,
-          last_name: this.state.last_name
+          last_name: this.state.last_name,
+          vendor: this.state.vendor
         }).then((doc) => console.log('user created'))
+
+        firebase.firestore().collection('weddings').add({
+          user_id: user.uid,
+          bride_groom_1: this.state.first_name + ' ' + this.state.last_name,
+          bride_groom_2: '',
+          date: ''
+        })
       }).
       catch((error) => console.log(error)) // FIXME: do something with the error, e.g. "email already taken"
   }

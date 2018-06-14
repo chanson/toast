@@ -15,10 +15,22 @@ import { Header, Icon } from 'react-native-elements'
 import firebase from 'react-native-firebase'
 import moment from 'moment'
 
-import AddableHeader from '../../components/addable_header'
-import ChecklistItem from '../../components/checklist_item'
-import FormItem from '../../components/form_item'
-import ExpandableHeader from '../../components/expandable_header'
+import AddableHeader from 'app/components/addable_header'
+import ChecklistItem from 'app/components/checklist_item'
+import FormItem from 'app/components/form_item'
+import ExpandableHeader from 'app/components/expandable_header'
+
+import {
+  currentUserId,
+  getWeddingsForUser,
+  getWeddingTodosForUser
+} from 'app/utils/firestoreQueries'
+import {
+  calculateDate
+} from 'app/utils/todoHelpers'
+import {
+  extractDisplayDate
+} from 'app/utils/checklistItemHelpers'
 
 const styles = StyleSheet.create({
   container: {
@@ -38,10 +50,16 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: '#92D6EA'
   },
+  iconContainer: {
+    flexDirection: 'row'
+  },
   iconWrapper: {
     alignItems: 'flex-end',
     justifyContent: 'center',
     flex: 1
+  },
+  leftIcon: {
+    marginRight: 10
   },
   list: {
     alignSelf: 'stretch',
@@ -64,6 +82,7 @@ const styles = StyleSheet.create({
 class Dashboard extends Component {
   static navigationOptions = {
     drawerLabel: 'Dashboard',
+    headerBackTitle: 'Dashboard',
     title: '276 Days to Go!'
   }
 
@@ -79,11 +98,12 @@ class Dashboard extends Component {
 
   componentDidMount() {
     // FIXME: move wedding finding logic to util; maybe wrap in promise?
-    firebase.firestore().collection('weddings').where('user_id', '==', firebase.auth().currentUser.uid).get().then((wedding) => {
+    getWeddingsForUser(currentUserId()).then((wedding) => {
       if(wedding != undefined) {
         this.setState({
           ...this.state,
-          wedding: wedding.docs[0].data()
+          wedding: wedding.docs[0].data(),
+          weddingId: wedding.docs[0].id
         }, () => this._buildChecklists())
       } else {
         this._buildChecklists()
@@ -94,30 +114,30 @@ class Dashboard extends Component {
   _buildChecklists() {
     let months = {}
 
-    // FIXME: move to util
     // FIXME: subscribe and set loader until results are present, then unsubscribe
-    // FIXME: use wedding date if exists
-    firebase.firestore().collection('wedding_todos').where('user_id', '==', firebase.auth().currentUser.uid).get().then((item) => {
-      item.forEach((doc) => {
+    getWeddingTodosForUser(currentUserId()).then((todoDocs) => {
+      todoDocs.forEach((doc) => {
         const todo = doc.data()
-        let dueDate = moment().add(1, 'y').subtract(todo.days_before_wedding, 'days')
 
-        if(this.state.wedding !== undefined && this.state.wedding.date !== undefined) {
-          dueDate = moment(this.state.wedding.date, 'MM/DD/YYYY').subtract(todo.days_before_wedding, 'days')
+        const dueDate = calculateDate(todo, this.state.wedding)
+        const dateKey = dueDate.format('YYYY[_]MM')
+        let text = todo.text
+        let editScreen = 'EditTodo'
+
+        if(todo.parent_id != null && todo.parent_id != undefined) {
+          text = `$${todo.text}`
+          editScreen = 'EditPayment'
         }
 
-        if(todo.date !== undefined && todo.date !== '' && todo.date !== null) {
-          dueDate = moment(todo.date, 'MM/DD/YYYY')
-        }
-        const dateKey = dueDate.format('MMMM[_]YYYY')
         const data = {
           daysBefore: todo.days_before_wedding,
           date: todo.date,
           complete: todo.complete,
           id: doc.id,
           key: doc.id,
-          task: todo.text,
-          isVendor: todo.vendor
+          task: text,
+          isVendor: todo.vendor,
+          editScreen: editScreen
         }
 
         let monthDate = months[dateKey]
@@ -137,7 +157,7 @@ class Dashboard extends Component {
         return {
           data: months[key],
           key: key,
-          title: key.replace('_', ' ') + ':'
+          title: moment(key, 'YYYY[_]MM').format('MMMM[ ]YYYY[:]')
         }
       })
 
@@ -152,16 +172,16 @@ class Dashboard extends Component {
   _renderHeader(month, i, isActive) {
     return (
       <View>
-        <ExpandableHeader section={month}/>
+        <ExpandableHeader section={month} isActive={isActive}/>
       </View>
     );
   }
 
   _navigateTask = (id, isVendor) => {
     if (isVendor) {
-      this.props.navigation.navigate('Vendor', { todoId: id })
+      this.props.navigation.navigate('Vendor', { todoId: id, weddingId: this.state.weddingId })
     } else {
-      this.props.navigation.navigate('TodoNotes', { todoId: id })
+      this.props.navigation.navigate('TodoNotes', { todoId: id, weddingId: this.state.weddingId })
     }
   }
 
@@ -169,29 +189,7 @@ class Dashboard extends Component {
     return (
       <View style={{height: month.data.length * 47}}>
         {month.data.map((item) => {
-          // FIXME: move date logic to util
-          let diffBound = 'months'
-          let baseDate = moment().add(1, 'y') // FIXME: should this be one year from user creation?
-          if(this.state.wedding !== undefined && this.state.wedding.date !== undefined) {
-            baseDate = moment(this.state.wedding.date, 'MM/DD/YYYY')
-          }
-          let dueDate = item.date
-          let displayDate = ''
-
-          if(dueDate == undefined || dueDate == null ) {
-            dueDate = moment(this.state.wedding.date, 'MM/DD/YYYY').subtract(item.daysBefore, 'days')
-
-            if (item.daysBefore < 14) {
-              diffBound = 'days'
-            } else if (item.daysBefore < 30) {
-              diffBound = 'weeks'
-            } else {
-              diffBound = 'months'
-            }
-            displayDate = `${baseDate.diff(dueDate, diffBound)} ${diffBound} before`
-          } else {
-            displayDate = moment(dueDate).format('MM/DD/YYYY')
-          }
+          const displayDate = extractDisplayDate(item, this.state.wedding)
 
           return (
             <ChecklistItem
@@ -201,15 +199,27 @@ class Dashboard extends Component {
               key={item.key}
               task={item.task}
               rightComponent={
-                <TouchableOpacity
-                  onPress={() => this._navigateTask(item.id, item.isVendor)}
-                  style={styles.iconWrapper}
-                >
-                  <Icon
-                    name='info-outline'
-                    type='material-icons'
-                  />
-                </TouchableOpacity>
+                <View style={styles.iconWrapper}>
+                  <View style={styles.iconContainer}>
+                    <TouchableOpacity
+                      onPress={() => this.props.navigation.navigate(item.editScreen, { todoId: item.id, weddingId: this.state.weddingId })}
+                      style={styles.leftIcon}
+                    >
+                      <Icon
+                        name='calendar-edit'
+                        type='material-community'
+                      />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => this._navigateTask(item.id, item.isVendor)}
+                    >
+                      <Icon
+                        name='info-outline'
+                        type='material-icons'
+                      />
+                    </TouchableOpacity>
+                  </View>
+                </View>
               }
             />
           )}
@@ -228,7 +238,7 @@ class Dashboard extends Component {
     if (this.state.loaded) {
       content = (
         <View style={styles.listWrapper}>
-          <AddableHeader title='Wedding Checklist:' navigation={this.props.navigation}/>
+          <AddableHeader title='Wedding Checklist:' navigation={this.props.navigation} vendorId={undefined} weddingId={this.state.weddingId}/>
           <Accordion
             sections={this.state.months}
             renderHeader={this._renderHeader}
@@ -241,16 +251,8 @@ class Dashboard extends Component {
       )
     }
 
-    // <Header
-    //   leftComponent={{ icon: 'menu', color: '#000', onPress: () => this.props.navigation.navigate('DrawerOpen') }}
-    //   centerComponent={{ text: '276 Days to Go!', style: { color: '#000', fontFamily: 'Avenir', fontWeight: '300', fontSize: 17 } }}
-    //   rightComponent={{ icon: 'face', color: '#000' }}
-    //   outerContainerStyles={styles.header}
-    // />
-
     return (
       <View style={styles.container}>
-
         <View style={styles.contentWrapper}>
           {content}
         </View>

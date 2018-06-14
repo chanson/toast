@@ -18,19 +18,10 @@ import firebase from 'react-native-firebase';
 import {
   DashboardNav,
   LandingNav,
-  WelcomeNav
+  WelcomeNav,
+  VendorDashboardNav,
+  VendorWelcomeNav
 } from './app/config/router'
-
-// Initialize Firebase
-// const firebaseConfig = {
-//   apiKey: 'AIzaSyCeiT2beh_u3J3spqGDVuLU3pCNxw_RLIA',
-//   authDomain: 'toast-1821c.firebaseapp.com',
-//   databaseURL: 'https://toast-1821c.firebaseio.com',
-//   projectId: 'toast-1821c',
-//   storageBucket: 'toast-1821c.appspot.com',
-//   messagingSenderId: '850874118372'
-// };
-// const firebaseApp = firebase.initializeApp(firebaseConfig);
 
 class App extends React.Component {
 
@@ -91,12 +82,23 @@ class App extends React.Component {
       )
     } else if (!this.state.authUser) {
       return <LandingNav />
-    } else if (!this.state.completedFtu) {
-      return <WelcomeNav screenProps={{ user: this.state.user }} />
+    } else if (this.state.user.data().vendor) {
+      if (!this.state.completedFtu) {
+        return <VendorWelcomeNav screenProps={{ user: this.state.user }} />
+      } else {
+        return (
+          <VendorDashboardNav />
+        )
+      }
     } else {
-      return (
-        <DashboardNav />
-      );
+      console.log(this.state.user)
+      if (!this.state.completedFtu) {
+        return <WelcomeNav screenProps={{ user: this.state.user }} />
+      } else {
+        return (
+          <DashboardNav />
+        );
+      }
     }
   }
 }

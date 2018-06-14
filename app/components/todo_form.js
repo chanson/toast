@@ -58,8 +58,25 @@ class TodoForm extends BaseForm {
   constructor(props) {
     super(props)
     this.state = {
+      date: '',
       todo: '',
-      date: ''
+      todoRef: undefined
+    }
+  }
+
+  componentDidMount() {
+    if(this.props.todoId !== undefined) {
+      firebase.firestore().collection('wedding_todos').doc(this.props.todoId).get().then((todo) => {
+        const todoData = todo.data()
+        console.log(todoData)
+        console.log(todoData.text)
+        this.setState({
+          ...this.state,
+          date: todoData.date,
+          todo: todoData.text,
+          todoRef: todo.ref
+        })
+      })
     }
   }
 
@@ -76,6 +93,7 @@ class TodoForm extends BaseForm {
                 <FormItem
                   field={item.field}
                   id={item.key}
+                  initialValue={this.state[item.key]}
                   secure={item.secure}
                   keyboardType={item.keyboardType}
                   handleChange={this.handleChange.bind(this)}
@@ -106,22 +124,38 @@ class TodoForm extends BaseForm {
   }
 
   _addTask = () => {
+    console.log(this.props.navigation)
+    weddingId = this.props.navigation.state.params.weddingId
+
     // FIXME: Add loader here before kicking off firestore request
-    firebase.firestore().collection('weddings').where('user_id', '==', firebase.auth().currentUser.uid).get().then((wedding) => {
+    firebase.firestore().collection('weddings').doc(weddingId).get().then((wedding) => {
+      console.log(wedding)
       date = moment(this.state.date, 'MM/DD/YYYY')
-      daysBeforeWedding = moment(wedding.docs[0].data().date, 'MM/DD/YYYY').diff(date, 'days')
-      firebase.firestore().collection('wedding_todos').add({
-        user_id: firebase.auth().currentUser.uid,
-        text: this.state.todo,
-        date: date.toDate(),
-        days_before_wedding: daysBeforeWedding,
-        complete: false,
-        vendor: false, // FIXME: add vendor toggle
-        vendor_id: this.props.navigation.state.params.vendorId,
-        parent_id: this.props.navigation.state.params.parentId
-      }).then(() => {
-        this.props.navigation.goBack(this.props.navigation.state.key)
-      })
+      daysBeforeWedding = moment(wedding.data().date, 'MM/DD/YYYY').diff(date, 'days')
+
+      if (this.state.todoRef === undefined) {
+        firebase.firestore().collection('wedding_todos').add({
+          user_id: firebase.auth().currentUser.uid,
+          text: this.state.todo,
+          date: date.toDate(),
+          days_before_wedding: daysBeforeWedding,
+          complete: false,
+          vendor: false, // FIXME: add vendor toggle
+          vendor_id: this.props.navigation.state.params.vendorId,
+          parent_id: this.props.navigation.state.params.parentId,
+          wedding_id: weddingId
+        }).then((todo) => {
+          console.log(todo.id)
+          this.props.navigation.goBack(this.props.navigation.state.key)
+        })
+      } else {
+        this.state.todoRef.update({
+          text: this.state.todo,
+          date: date.toDate()
+        }).then(() => {
+          this.props.navigation.goBack(this.props.navigation.state.key)
+        })
+      }
     })
   }
 }

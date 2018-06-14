@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import {
+  ActivityIndicator,
   Image,
   ListItem,
   SectionList,
@@ -60,12 +61,10 @@ class CoupleWelcome extends BaseForm {
   constructor() {
     super()
     this.state = {
-      bride_groom_1: '',
-      bride_groom_2: '',
+      future_spouse: '',
       date: '',
       errors: {
-        bride_groom_1: '',
-        bride_groom_2: '',
+        future_spouse: '',
         date: ''
       }
     }
@@ -99,9 +98,8 @@ class CoupleWelcome extends BaseForm {
               sections={[
                 {
                   data: [
-                    { field: 'Bride / Groom', key: 'bride_groom_1' },
-                    { field: 'Bride / Groom', key: 'bride_groom_2' },
-                    { field: 'Wedding Date', key: 'date', datepicker: true }
+                    { field: "Fiancée / Fiancé", key: 'future_spouse' },
+                    { field: 'Wedding Date', key: 'date', datepicker: true, required: true }
                   ],
                   key: 'details',
                   title: 'Wedding Details:'
@@ -115,6 +113,7 @@ class CoupleWelcome extends BaseForm {
             text="Let's Go!"
           />
           <OnboardingButton
+            onPress={ this._navigateDashboard.bind(this) }
             text='Skip for Now'
           />
         </View>
@@ -122,16 +121,22 @@ class CoupleWelcome extends BaseForm {
     )
   }
 
-  _createWedding = () => {
+  _navigateDashboard = () => {
+    this.props.navigation.navigate('DashboardNav')
+  }
+
+  _updateWedding = () => {
     // FIXME: Add loader here before kicking off firestore request
-    firebase.firestore().collection('weddings').add({
-      user_id: this.props.screenProps.user.data().user_auth_uid,
-      bride_groom_1: this.state.bride_groom_1,
-      bride_groom_2: this.state.bride_groom_2,
-      date: this.state.date
-    }).then((wedding) => {
-      this.props.screenProps.user.ref.update({ wedding_id: wedding.id, completed_ftu: true, completed_ftu_at: new Date() })
-      this.props.navigation.navigate('DashboardNav')
+    firebase.firestore().collection('weddings').where('user_id', '==', this.props.screenProps.user.data().user_auth_uid).get().then((docs) => {
+      const wedding = docs.docs[0]
+
+      wedding.ref.update({
+        bride_groom_2: this.state.future_spouse,
+        date: this.state.date
+      }).then(res => {
+        this.props.screenProps.user.ref.update({ wedding_id: wedding.id, completed_ftu: true, completed_ftu_at: new Date() })
+        this._navigateDashboard()
+      })
     })
   }
 
@@ -154,7 +159,7 @@ class CoupleWelcome extends BaseForm {
       if(Object.values(this.state.errors).some((val) => val != '')) {
         return
       } else {
-        this._createWedding()
+        this._updateWedding()
       }
     })
   }

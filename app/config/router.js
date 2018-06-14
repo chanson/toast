@@ -1,5 +1,5 @@
 import React from 'react'
-import { DrawerNavigator, StackNavigator, DrawerItems } from 'react-navigation'
+import { StackNavigator } from 'react-navigation'
 import Landing from '../screens/Landing'
 import Login from '../screens/Login'
 import Signup from '../screens/Signup'
@@ -10,13 +10,12 @@ import NewTodo from '../screens/couple/NewTodo'
 import NewPayment from '../screens/couple/NewPayment'
 import LogOut from '../screens/drawer/LogOut'
 import TodoNotes from '../screens/couple/TodoNotes'
-
-import {
-  ScrollView,
-  View
-} from 'react-native';
-
-import { Icon } from 'react-native-elements'
+import EditTodo from '../screens/couple/EditTodo'
+import EditPayment from '../screens/couple/EditPayment'
+import VendorWelcome from '../screens/vendor/VendorWelcome'
+import VendorDashboard from '../screens/vendor/Dashboard'
+import NewWedding from '../components/new_wedding'
+import NewTodoLanding from 'app/screens/NewTodoLanding'
 
 const LogOutStack = StackNavigator(
   {
@@ -28,9 +27,55 @@ const LogOutStack = StackNavigator(
   }
 )
 
+import { DrawerNavigator, DrawerItems } from 'react-navigation'
+
+import {
+  ScrollView,
+  View
+} from 'react-native'
+
+import { Icon } from 'react-native-elements'
+
+
 const DrawerStack = DrawerNavigator(
   {
     Dashboard: { screen: CoupleDashboard }
+  },
+  {
+    headerMode: 'float',
+    navigationOptions: ({ navigation }) => ({
+      headerStyle: {
+        backgroundColor: '#92D6EA',
+        paddingHorizontal: 15
+      },
+      headerTintColor: '#000',
+      headerTitleStyle: {
+        fontFamily: 'Avenir',
+        fontWeight: '300',
+        fontSize: 17
+      },
+      headerLeft: <Icon
+        name='menu'
+        onPress={() => navigation.navigate('DrawerOpen')}
+      />,
+      headerRight: <Icon
+        name='face'
+      />
+    }),
+    contentComponent:(props) => (
+      <View style={{flex:1}}>
+        <ScrollView forceInset={{ top: 'always', horizontal: 'never' }}>
+          <DrawerItems {...props} />
+          <LogOut/>
+        </ScrollView>
+      </View>
+    )
+  }
+)
+
+const VendorDrawerStack = DrawerNavigator(
+  {
+    Dashboard: { screen: VendorDashboard }
   },
   {
     headerMode: 'float',
@@ -85,6 +130,9 @@ export const VendorNav = StackNavigator(
     },
     NewTodo: {
       screen: NewPayment
+    },
+    EditPayment: {
+      screen: EditPayment
     }
   },
   {
@@ -106,6 +154,50 @@ export const DashboardNav = StackNavigator(
     },
     TodoNotes: {
       screen: TodoNotes
+    },
+    EditTodo: {
+      screen: EditTodo
+    },
+    EditPayment: {
+      screen: EditPayment
+    }
+  },
+  {
+    initialRouteName: 'DashboardRoot'
+  }
+)
+
+export const NewTodoLandingNav = StackNavigator(
+  {
+    TodoLanding: {
+      screen: NewTodoLanding
+    },
+    NewTodo: {
+      screen: NewTodo
+    },
+    NewPayment: {
+      screen: NewPayment
+    },
+    NewVendor: {
+      screen: VendorEdit
+    }
+  },
+  {
+    initialRouteName: 'TodoLanding',
+    headerMode: 'none'
+  }
+)
+
+export const VendorDashboardNav = StackNavigator(
+  {
+    DashboardRoot: {
+      screen: VendorDrawerStack
+    },
+    NewWedding: {
+      screen: NewWedding
+    },
+    NewTodoLandingNav: {
+      screen: NewTodoLandingNav
     }
   },
   {
@@ -127,6 +219,20 @@ export const WelcomeNav = StackNavigator(
   }
 );
 
+export const VendorWelcomeNav = StackNavigator(
+  {
+    VendorWelcome: {
+      screen: VendorWelcome
+    },
+    VendorDashboardNav: {
+      screen: VendorDashboardNav
+    }
+  },
+  {
+    headerMode: 'none'
+  }
+)
+
 export const LandingNav = StackNavigator(
   {
     Landing: {
@@ -140,6 +246,9 @@ export const LandingNav = StackNavigator(
     },
     WelcomeNav: {
       screen: WelcomeNav
+    },
+    VendorNav: {
+      screen: VendorNav
     }
   },
   {
