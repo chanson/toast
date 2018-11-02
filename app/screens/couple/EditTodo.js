@@ -18,6 +18,7 @@ class EditTodo extends Component {
   }
 
   render() {
+    console.log(this.props.navigation)
     return (
       <TodoForm
         navigation={this.props.navigation}

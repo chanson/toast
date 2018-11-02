@@ -27,7 +27,8 @@ import {
   getWeddingTodosForUser
 } from 'app/utils/firestoreQueries'
 import {
-  calculateDate
+  calculateDate,
+  daysBetweenWedding
 } from 'app/utils/todoHelpers'
 import {
   extractDisplayDate
@@ -47,6 +48,11 @@ const styles = StyleSheet.create({
     fontFamily: 'Avenir',
     fontSize: 17,
     fontWeight: '300'
+  },
+  flexRow: {
+    alignSelf: 'stretch',
+    flex: 1,
+    flexDirection: 'row'
   },
   header: {
     backgroundColor: '#92D6EA'
@@ -72,27 +78,54 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     marginBottom: 30
   },
-  loaderWrapper: {
-    marginTop: 50
+  row: {
+    // alignItems: 'stretch',
+    backgroundColor: '#EBF3F6',
+    borderBottomWidth: 1,
+    borderBottomColor: '#CCCCCC',
+    // flex: 1,
+    // flexDirection: 'row',
+    margin: 0,
+    paddingHorizontal: 16,
+    paddingVertical: 5
+  },
+  text: {
+    fontFamily: 'Avenir',
+    fontWeight: '300'
+  },
+  textWrapper: {
+    justifyContent: 'center'
   },
   title: {
     fontFamily: 'Avenir',
     fontSize: 48,
     fontWeight: '300',
     paddingBottom: 15
-  },
-  weddingWeekButtonWrapper: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: -15
   }
 })
 
-class Dashboard extends Component {
-  static navigationOptions = {
-    drawerLabel: 'Dashboard',
-    headerBackTitle: 'Dashboard',
-    title: '276 Days to Go!'
+class WeddingWeekDash extends Component {
+  static navigationOptions = ({ navigation }) => {
+    return {
+      headerLeft: (
+        <TouchableOpacity onPress={() => {
+          navigation.goBack(navigation.state.key)
+        } }>
+          <Text>Back</Text>
+        </TouchableOpacity>
+      ),
+      headerStyle: {
+        backgroundColor: '#92D6EA',
+        paddingHorizontal: 15
+      },
+      headerTintColor: '#000',
+      headerTitleStyle: {
+        fontFamily: 'Avenir',
+        fontWeight: '300',
+        fontSize: 17
+      },
+      title: 'Wedding Week'
+    }
   }
 
   constructor(props) {
@@ -127,6 +160,11 @@ class Dashboard extends Component {
     getWeddingTodosForUser(currentUserId()).then((todoDocs) => {
       todoDocs.forEach((doc) => {
         const todo = doc.data()
+
+        const daysBetweenTodoAndWedding = daysBetweenWedding(todo, this.state.wedding)
+        if(daysBetweenTodoAndWedding > 7) {
+          return
+        }
 
         const dueDate = calculateDate(todo, this.state.wedding)
         const dateKey = dueDate.format('YYYY[_]MM')
@@ -195,46 +233,56 @@ class Dashboard extends Component {
   }
 
   _renderContent(month, i, isActive) {
-    return (
-      <View style={{height: month.data.length * 47}}>
-        {month.data.map((item) => {
-          const displayDate = extractDisplayDate(item, this.state.wedding)
+    return this.state.months.map((months) => {
+      // console.log(months)
+      return months.data.map((item) => {
+        console.log(item);
+        const displayDate = extractDisplayDate(item, this.state.wedding)
 
-          return (
-            <ChecklistItem
-              isChecked={item.complete}
-              date={displayDate}
-              id={item.id}
-              key={item.key}
-              task={item.task}
-              rightComponent={
-                <View style={styles.iconWrapper}>
-                  <View style={styles.iconContainer}>
-                    <TouchableOpacity
-                      onPress={() => this.props.navigation.navigate(item.editScreen, { todoId: item.id, weddingId: this.state.weddingId })}
-                      style={styles.leftIcon}
-                    >
-                      <Icon
-                        name='calendar-edit'
-                        type='material-community'
-                      />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={() => this._navigateTask(item.id, item.isVendor)}
-                    >
-                      <Icon
-                        name='info-outline'
-                        type='material-icons'
-                      />
-                    </TouchableOpacity>
-                  </View>
+        const vendorInfo = item.isVendor && (
+          <Text style={styles.text}>
+            FIXME: Add Vendor
+          </Text>
+        )
+
+        return (
+          <View style={[{height: item.isVendor ? 65 : 47}, styles.row]} key={item.key}>
+            <View style={styles.flexRow}>
+              <View style={styles.textWrapper}>
+                <Text style={styles.text}>
+                  {displayDate}
+                </Text>
+                <Text style={styles.text}>
+                  {item.task}
+                </Text>
+                {vendorInfo}
+              </View>
+              <View style={styles.iconWrapper}>
+                <View style={styles.iconContainer}>
+                  <TouchableOpacity
+                    onPress={() => this.props.navigation.navigate(item.editScreen, { todoId: item.id, weddingId: this.state.weddingId })}
+                    style={styles.leftIcon}
+                  >
+                    <Icon
+                      name='calendar-edit'
+                      type='material-community'
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => this._navigateTask(item.id, item.isVendor)}
+                  >
+                    <Icon
+                      name='info-outline'
+                      type='material-icons'
+                    />
+                  </TouchableOpacity>
                 </View>
-              }
-            />
-          )}
-        )}
-      </View>
-    )
+              </View>
+            </View>
+          </View>
+        )
+      })
+    })
   }
 
   _setSection(section) {
@@ -242,32 +290,17 @@ class Dashboard extends Component {
   }
 
   render() {
-    let content = (
-      <View style={styles.loaderWrapper}>
-        <ActivityIndicator size='large' color='#0000ff' />
-      </View>
-    )
-
-    const weddingPlanButton = true && <OnboardingButton
-      onPress={ () => { this.props.navigation.navigate('WeddingWeekDash', { weddingId: this.state.weddingId }) } }
-      text="View Wedding Week Plan"
-    />
+    let content = <ActivityIndicator size='large' color='#0000ff' />
 
     if (this.state.loaded) {
+      // console.log('output:')
+      // console.log(this._renderContent()[0])
       content = (
         <View style={styles.listWrapper}>
-          <View style={styles.weddingWeekButtonWrapper}>
-            {weddingPlanButton}
+          <View style={styles.list}>
+            <AddableHeader title='Wedding Checklist:' navigation={this.props.navigation} vendorId={undefined} weddingId={this.state.weddingId}/>
+            {this._renderContent()[0]}
           </View>
-          <AddableHeader title='Wedding Checklist:' navigation={this.props.navigation} vendorId={undefined} weddingId={this.state.weddingId}/>
-          <Accordion
-            sections={this.state.months}
-            renderHeader={this._renderHeader}
-            renderContent={this._renderContent.bind(this)}
-            duration={400}
-            onChange={this._setSection.bind(this)}
-            style={styles.list}
-          />
         </View>
       )
     }
@@ -282,4 +315,4 @@ class Dashboard extends Component {
   }
 }
 
-module.exports = Dashboard;
+module.exports = WeddingWeekDash;

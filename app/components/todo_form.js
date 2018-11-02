@@ -124,13 +124,12 @@ class TodoForm extends BaseForm {
   }
 
   _addTask = () => {
-    console.log(this.props.navigation)
     weddingId = this.props.navigation.state.params.weddingId
 
     // FIXME: Add loader here before kicking off firestore request
     firebase.firestore().collection('weddings').doc(weddingId).get().then((wedding) => {
-      console.log(wedding)
-      date = moment(this.state.date, 'MM/DD/YYYY')
+      console.log(this.state.date)
+      date = moment(this.state.date, 'MM/DD/YYYY hh:mm A')
       daysBeforeWedding = moment(wedding.data().date, 'MM/DD/YYYY').diff(date, 'days')
 
       if (this.state.todoRef === undefined) {
@@ -140,6 +139,7 @@ class TodoForm extends BaseForm {
           date: date.toDate(),
           days_before_wedding: daysBeforeWedding,
           complete: false,
+          type: this.props.type,
           vendor: false, // FIXME: add vendor toggle
           vendor_id: this.props.navigation.state.params.vendorId,
           parent_id: this.props.navigation.state.params.parentId,

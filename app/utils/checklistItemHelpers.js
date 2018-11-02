@@ -5,13 +5,13 @@ export function extractDisplayDate(checklistItem, wedding) {
   let diffBound = 'months'
   let baseDate = moment().add(1, 'y') // FIXME: should this be one year from user creation?
   if(wedding !== undefined && wedding.date !== undefined) {
-    baseDate = moment(wedding.date, 'MM/DD/YYYY')
+    baseDate = moment(wedding.date, 'MM/DD/YYYY hh:mm A')
   }
   let dueDate = checklistItem.date
   let displayDate = ''
 
   if(dueDate == undefined || dueDate == null ) {
-    dueDate = moment(wedding.date, 'MM/DD/YYYY').subtract(checklistItem.daysBefore, 'days')
+    dueDate = moment(wedding.date, 'MM/DD/YYYY hh:mm A').subtract(checklistItem.daysBefore, 'days')
 
     if (checklistItem.daysBefore < 14) {
       diffBound = 'days'
@@ -22,7 +22,7 @@ export function extractDisplayDate(checklistItem, wedding) {
     }
     displayDate = `${baseDate.diff(dueDate, diffBound)} ${diffBound} before`
   } else {
-    displayDate = moment(dueDate).format('MM/DD/YYYY')
+    displayDate = moment(dueDate).format('MM/DD/YYYY hh:mm A')
   }
 
   return displayDate

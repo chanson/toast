@@ -5,6 +5,7 @@ import FormItem from '../components/form_item';
 
 class BaseForm extends Component {
   handleChange(text, field) {
+    console.log('new text: ' + text)
     this.setState({
       ...this.state,
       [field]: text,

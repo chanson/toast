@@ -189,7 +189,7 @@ class Dashboard extends Component {
             let text = todo.text
             let editScreen = 'EditTodo'
 
-            if(todo.parent_id != null && todo.parent_id != undefined) {
+            if(todo.type == 'payment') {
               text = `$${todo.text}`
               editScreen = 'EditPayment'
             }

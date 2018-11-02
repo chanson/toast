@@ -1,8 +1,18 @@
 import React, { Component } from 'react'
 import {
-  Button
+  StyleSheet,
+  Text,
+  TouchableOpacity
 } from 'react-native'
 import firebase from 'react-native-firebase';
+
+const styles = StyleSheet.create({
+  button: {
+    color: '#2196f3',
+    fontWeight: 'bold',
+    margin: 16
+  }
+})
 
 class LogOut extends Component {
   static navigationOptions = {
@@ -15,10 +25,11 @@ class LogOut extends Component {
 
   render() {
     return(
-      <Button
+      <TouchableOpacity
         onPress={ this._logOut.bind(this) }
-        title="Log Out"
-      />
+      >
+        <Text style={styles.button}>Log Out</Text>
+      </TouchableOpacity>
     )
   }
 }

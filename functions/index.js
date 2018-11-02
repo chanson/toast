@@ -1,6 +1,12 @@
 const functions = require('firebase-functions');
-
 const admin = require('firebase-admin');
+
+import {
+  PAYMENT,
+  TASK,
+  VENDOR
+} from 'app/config/todo_types';
+
 admin.initializeApp(functions.config().firebase);
 
 exports.createWedding = functions.firestore
@@ -23,6 +29,7 @@ exports.createWedding = functions.firestore
       complete: false,
       parent_id: null,
       vendor: true,
+      type: VENDOR,
       vendor_id: null,
       wedding_id: weddingId
     })
@@ -35,6 +42,7 @@ exports.createWedding = functions.firestore
       complete: false,
       parent_id: null,
       vendor: false,
+      type: TASK,
       vendor_id: null,
       wedding_id: weddingId
     })

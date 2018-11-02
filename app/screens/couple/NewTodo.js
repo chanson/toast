@@ -5,6 +5,7 @@ import {
 } from 'react-native'
 
 import TodoForm from 'app/components/todo_form'
+import { TASK } from 'app/config/todo_types'
 
 class NewTodo extends Component {
   static navigationOptions = ({ navigation }) => {
@@ -37,6 +38,7 @@ class NewTodo extends Component {
         submitText='Add Task'
         title='Add New Task:'
         todoName='Name'
+        type={TASK}
       />
     )
   }

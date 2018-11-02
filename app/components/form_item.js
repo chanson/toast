@@ -74,7 +74,7 @@ class FormItem extends Component {
 
     if(this.state.text == undefined || this.state.text == '') {
       if (nextProps.initialValue instanceof Date) {
-        newState['text'] = moment(nextProps.initialValue, 'MM/DD/YYYY').format('MM/DD/YYYY')
+        newState['text'] = moment(nextProps.initialValue, 'MM/DD/YYYY hh:mm A').format('MM/DD/YYYY hh:mm A')
       } else {
         newState['text'] = nextProps.initialValue
       }
@@ -113,10 +113,10 @@ class FormItem extends Component {
             style={{height: 0}}
             ref={(ref) => this.datepicker = ref}
             date={this.state.text}
-            mode='date'
+            mode='datetime'
             placeholder='select date'
-            format='MM/DD/YYYY'
-            minDate={moment().format('MM/DD/YYYY')}
+            format='MM/DD/YYYY hh:mm A'
+            minDate={moment().format('MM/DD/YYYY hh:mm A')}
             confirmBtnText='Confirm'
             cancelBtnText='Cancel'
             onDateChange={this._updateForm.bind(this)}
@@ -135,7 +135,7 @@ class FormItem extends Component {
             inputContainerStyle={this._inputStyle()}
             inputContainerPadding={this.state.error == '' ? 0 : 5}
             secureTextEntry={this.props.secure}
-            value={this.state.text}
+            value={moment(this.state.text, 'MM/DD/YYYY hh:mm A').format('MM/DD/YYYY hh:mm A')}
             titleTextStyle={styles.error}
             error={this.state.error}
             onFocus={this._openDatePicker.bind(this)}

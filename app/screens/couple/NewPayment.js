@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import { Text, TouchableOpacity } from 'react-native'
 
-import TodoForm from '../../components/todo_form'
+import TodoForm from 'app/components/todo_form'
+import { PAYMENT } from 'app/config/todo_types'
 
 class NewPayment extends Component {
   static navigationOptions = ({ navigation }) => {
@@ -34,6 +35,7 @@ class NewPayment extends Component {
         todoName='Amount'
         title='Add New Payment:'
         submitText='Add Payment'
+        type={PAYMENT}
       />
     )
   }

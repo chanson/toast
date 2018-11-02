@@ -77,7 +77,7 @@ class App extends React.Component {
       // FIXME: make this prettier
       return(
         <View>
-          <ActivityIndicator size='large' color='#0000ff' />
+          <ActivityIndicator size='large' color='#0000ff' style={{marginTop: 50}} />
         </View>
       )
     } else if (!this.state.authUser) {

@@ -16,6 +16,7 @@ import VendorWelcome from '../screens/vendor/VendorWelcome'
 import VendorDashboard from '../screens/vendor/Dashboard'
 import NewWedding from '../components/new_wedding'
 import NewTodoLanding from 'app/screens/NewTodoLanding'
+import WeddingWeekDash from 'app/screens/couple/WeddingWeekDash'
 
 const LogOutStack = StackNavigator(
   {
@@ -160,6 +161,9 @@ export const DashboardNav = StackNavigator(
     },
     EditPayment: {
       screen: EditPayment
+    },
+    WeddingWeekDash: {
+      screen: WeddingWeekDash
     }
   },
   {
